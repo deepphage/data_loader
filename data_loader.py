@@ -17,15 +17,28 @@ class DnaDataSet(Dataset):
 		y = self.labels[index]
 		return X, y
 
-dna_load = DnaLoad("data/input_file.txt")
-kmers = dna_load.get_kmer(3, 2, 1)
-labels = dna_load.get_labels(3, 2, 1)
+class PhageLoader():
+	def __init__(self, file):
+		self.file = file
+		self.dna_load = DnaLoad(file)
 
-dataset = DnaDataSet(kmers, labels)
-train_loader = DataLoader(dataset=dataset, batch_size=100)
-for i, data in enumerate(train_loader, 0):
-	X, y = data
-	print(X)
+	def get_kmers(self, k, stride, genome_n, embedding=None, embed_size=None):
+		kmers = self.dna_load.get_kmer(k, stride, genome_n, embedding, embed_size)
+		labels = self.dna_load.get_labels(k, stride, genome_n)
+		return DnaDataSet(kmers, labels)
+
+
+# loader = PhageLoader("data/input_file.txt")
+# dataset = loader.get_kmers(3,2,1)
+# train_loader = DataLoader(dataset=dataset, batch_size=5)
+
+# for i, data in enumerate(train_loader, 0):
+# 	X, y = data
+# 	print(X)
+
+
+
+
 
 
 

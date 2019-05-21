@@ -1,5 +1,8 @@
 import numpy as np
 import pickle
+import torch.nn as nn
+import torch
+from itertools import product
 from dna2vec.dna2vec.multi_k_model import MultiKModel
 
 class DnaLoad:
@@ -52,23 +55,38 @@ class DnaLoad:
 			for i in range(0, len(fseq) - k + 1, stride):
 				yield fseq[i:i+k]
 
-	def get_kmer(self, k, stride, genome_number, embedding=None):
+	def get_kmer(self, k, stride, genome_number, embedding=None, embed_size=None):
 		kmers = np.empty(int(((len(self.sequence[genome_number])-k)/stride)+1), dtype=object)
 		for i, seq in enumerate(self.window_samples(k, stride, self.sequence[genome_number])):
 				kmers[i] = seq
 		if(embedding=='dna2vec'):
-			embeddings = np.empty([len(kmers), 100])
+			embeddings = torch.ones([len(kmers), 100], dtype=torch.float64)
 			for i, kmer in enumerate(kmers):
 				embed = self.mk_model.vector(kmer)
-				embeddings[i] = embed
+				embeddings[i] = torch.tensor(embed, dtype=torch.float64)
 			return embeddings
+		elif(embedding=='kmer_embed'):
+			assert embed_size != None, "When choosing kmer_embed, also provide an embed_size argument (int)"
+			kmer_dict = self.generate_kmer_dict(k)
+			vocab_size = len(kmer_dict)
+			kmer2embedding = nn.Embedding(vocab_size, embed_size)
+			print("embedding...")
+			embedded_kmers = torch.ones([len(kmers), embed_size], dtype=torch.float64)
+			for i, kmer in enumerate(kmers):
+				kmer_ = torch.tensor([kmer_dict[kmer]], dtype=torch.long)
+				embedded_kmers[i] = kmer2embedding(kmer_)
+			return embedded_kmers
 		else:
 			return kmers
 
+	# def kmer_to_embed(self, kmers_dict, embed_size):
+	
 
-# dna_load = DnaLoad("data/input_file.txt")
-# kmers = dna_load.get_kmer(3, 2, 0)
-# labels = dna_load.get_labels(3, 2, 0)
-# print(kmers[len(kmers)-1])
-
+	def generate_kmer_dict(self, window_size):
+		letters = 'AGCT'
+		vocab = [''.join(i) for i in product(letters, repeat = window_size)]
+		kmers_dict = {}
+		for i in range(len(vocab)):
+  			kmers_dict[vocab[i]] = i
+		return kmers_dict
 
