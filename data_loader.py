@@ -26,23 +26,3 @@ class PhageLoader():
 		kmers = self.dna_load.get_kmer(k, stride, genome_n, embedding, embed_size)
 		labels = self.dna_load.get_labels(k, stride, genome_n)
 		return DnaDataSet(kmers, labels)
-
-
-# loader = PhageLoader("data/input_file.txt")
-# dataset = loader.get_kmers(3,2,1)
-# train_loader = DataLoader(dataset=dataset, batch_size=5)
-
-# for i, data in enumerate(train_loader, 0):
-# 	X, y = data
-# 	print(X)
-
-
-
-
-
-
-
-
-
-
-
