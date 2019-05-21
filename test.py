@@ -19,11 +19,13 @@ example use: dataset = loader.get_kmers(3,2,1, embedding='kmer_embed', embed_siz
 '''
 
 loader = PhageLoader("data/input_file.txt")
-dataset = loader.get_kmers(3,2,1)
-train_loader = DataLoader(dataset=dataset, batch_size=5)
+dataset = loader.get_kmers(3,2,0, embedding='kmer_embed', embed_size=5)
+train_loader = DataLoader(dataset=dataset, batch_size=32)
 
+print(len(train_loader))
 for i, data in enumerate(train_loader, 0):
 	X, y = data
+
 
 
 

@@ -4,23 +4,28 @@ import torch.nn as nn
 import torch
 from itertools import product
 from dna2vec.dna2vec.multi_k_model import MultiKModel
+from statistics import mode 
 
 class DnaLoad:
 
-	def __init__(self, file_name, dna2vec=True): 
+	def __init__(self, file_name, dna2vec=False): 
 		self.input_file = file_name
 		self.f = None
 		self.dna2vec = dna2vec
-		# self.k = k
-		# self.stride = stride
+
 		if (self.dna2vec == True):
-			self.filepath = 'dna2vec/pretrained/dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v'
-			self.mk_model = MultiKModel(self.filepath)
+			self.init_dna2vec()
 
 		self.read_from_file()
 		self.sequence = np.empty(len(self.f), dtype=object)
 		self.lab = np.empty(len(self.f), dtype=object)
 		self.generate_sequence()
+	
+	def init_dna2vec(self):
+		print("Loading dna2vec matrix")
+		self.filepath = 'dna2vec/pretrained/dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v'
+		self.mk_model = MultiKModel(self.filepath)
+		print("Done loading .w2v")
 
 	def read_from_file(self):
 		self.f = open(self.input_file, 'r').readlines()
@@ -31,21 +36,22 @@ class DnaLoad:
 			self.lab[i] = self.f[i].split(';')[3]
 
 	def get_labels(self, k, stride, genome_number):
-		l = self.windows(k, stride, self.sequence[genome_number])
-		arr = np.zeros(len(l))
+		l = self.windows(k, stride, self.lab[genome_number])
+		arr = np.empty(len(l))
 		for i in range(len(l)):
-			ones = 0
-			for j in range(len(l[i])):
-				if l[i][j] == '1':
-					ones+=1
-			if ones>=2:
-				arr[i] = 1
+			lab_ = self.split(l[i])
+			lab = list(map(int, lab_))
+			overall_lab = mode(lab)
+			arr[i] = overall_lab
 		return arr
 
 
+	def split(self, l): 
+		return [char for char in l] 
+
 	def windows(self, k, stride, fseq):
 		list_of_k_mers = []
-		for seq in self.window_samples(k, stride, fseq):
+		for i,seq in enumerate(self.window_samples(k, stride, fseq)):
 			list_of_k_mers.append(seq)
 		return list_of_k_mers
 
@@ -60,6 +66,7 @@ class DnaLoad:
 		for i, seq in enumerate(self.window_samples(k, stride, self.sequence[genome_number])):
 				kmers[i] = seq
 		if(embedding=='dna2vec'):
+			self.init_dna2vec()
 			embeddings = torch.ones([len(kmers), 100], dtype=torch.float64)
 			for i, kmer in enumerate(kmers):
 				embed = self.mk_model.vector(kmer)
@@ -78,8 +85,6 @@ class DnaLoad:
 			return embedded_kmers
 		else:
 			return kmers
-
-	# def kmer_to_embed(self, kmers_dict, embed_size):
 	
 
 	def generate_kmer_dict(self, window_size):
@@ -87,6 +92,6 @@ class DnaLoad:
 		vocab = [''.join(i) for i in product(letters, repeat = window_size)]
 		kmers_dict = {}
 		for i in range(len(vocab)):
-  			kmers_dict[vocab[i]] = i
+			kmers_dict[vocab[i]] = i
 		return kmers_dict
 
