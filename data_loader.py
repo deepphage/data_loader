@@ -22,7 +22,28 @@ class PhageLoader():
 		self.file = file
 		self.dna_load = DnaLoad(file)
 
-	def get_kmers(self, k, stride, genome_n, embedding=None, embed_size=None):
-		kmers = self.dna_load.get_kmer(k, stride, genome_n, embedding, embed_size)
-		labels = self.dna_load.get_labels(k, stride, genome_n)
+	def get_kmers_for_read(self, k, stride, read_n, embedding=None, embed_size=None):
+		kmers = self.dna_load.get_kmer(k, stride, read_n, embedding, embed_size)
+		labels = self.dna_load.get_labels(k, stride, read_n)
 		return DnaDataSet(kmers, labels)
+
+	def get_n_loaders(self, n, batch_size, k, stride, embedding=None, embed_size=None):
+		loaders = []
+		for i in range(n):
+			dataset = self.get_kmers_for_read(k, stride, i, embedding, embed_size)
+			loaders.append(DataLoader(dataset=dataset, batch_size=batch_size))
+		return loaders
+
+
+# loader = PhageLoader("data/input_file.txt")
+# dataLoaders = loader.get_n_loaders(3,32,3,2, embedding="dict", embed_size=None)
+# train_loader = dataLoaders[0]
+# for i, data in enumerate(train_loader, 0):
+# 	X, y = data
+
+loader = PhageLoader("data/input_file.txt")
+dataset = loader.get_kmers_for_read(3,2,0, embedding="dict", embed_size=None)
+train_loader = DataLoader(dataset=dataset, batch_size=32)
+for i, data in enumerate(train_loader, 0):
+	X, y = data
+	print(X)

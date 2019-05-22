@@ -8,15 +8,19 @@ from statistics import mode
 
 class DnaLoad:
 
-	def __init__(self, file_name, dna2vec=False): 
+	def __init__(self, file_name, dna2vec=False, keep_reverse=False): 
 		self.input_file = file_name
 		self.f = None
 		self.dna2vec = dna2vec
+		self.all_genomes = []
 
 		if (self.dna2vec == True):
 			self.init_dna2vec()
 
 		self.read_from_file()
+		# keep only forward reads
+		if(keep_reverse == False):
+			self.f = self.keep_forward()
 		self.sequence = np.empty(len(self.f), dtype=object)
 		self.lab = np.empty(len(self.f), dtype=object)
 		self.generate_sequence()
@@ -26,6 +30,15 @@ class DnaLoad:
 		self.filepath = 'dna2vec/pretrained/dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v'
 		self.mk_model = MultiKModel(self.filepath)
 		print("Done loading .w2v")
+
+	def keep_forward(self):
+		newf = []
+		for i in range(len(self.f)):
+			read_type  = self.f[i].split(";")[4]
+			if(read_type[0:len(read_type)-1] == "forward"):
+				newf.append(self.f[i])
+		return newf
+
 
 	def read_from_file(self):
 		self.f = open(self.input_file, 'r').readlines()
@@ -55,11 +68,35 @@ class DnaLoad:
 			list_of_k_mers.append(seq)
 		return list_of_k_mers
 
+	def get_number_genomes(self):
+		return len(self.f)
+
 
 	def window_samples(self, k, stride, fseq):
 		if len(fseq)>2*k:
 			for i in range(0, len(fseq) - k + 1, stride):
 				yield fseq[i:i+k]
+
+
+	# returns a list of kmers for each of the files genomes
+	def get_kmers_for_n_genomes(self, n, k, stride, embedding=None, embed_size=None):
+		tot_kmers = []
+		assert n <= len(self.f), "argument n cannot be bigger than number of genomes available"
+		for i in range(n):
+			kmers = self.get_kmer(k, stride, i, embedding, embed_size)
+			tot_kmers.append(kmers)
+		return tot_kmers
+
+	def get_labels_for_n_genomes(self, n, k, stride):
+		tot_labs = []
+		assert n <= len(self.f), "argument n cannot be bigger than number of genomes available"
+		for i in range(n):
+			print(k)
+			lab = self.get_labels(k, 2, i)
+			tot_labs.append(lab)
+		return tot_labs
+
+
 
 	def get_kmer(self, k, stride, genome_number, embedding=None, embed_size=None):
 		kmers = np.empty(int(((len(self.sequence[genome_number])-k)/stride)+1), dtype=object)
@@ -83,9 +120,18 @@ class DnaLoad:
 				kmer_ = torch.tensor([kmer_dict[kmer]], dtype=torch.long)
 				embedded_kmers[i] = kmer2embedding(kmer_)
 			return embedded_kmers
+		elif(embedding=='dict'):
+			embeddings = torch.ones(len(kmers), dtype=torch.int32)
+			dic = self.generate_kmer_dict(k)
+			for i, kmer in enumerate(kmers):
+				kmer_ = self.generate_dict_embedding(kmer, dic)
+				embeddings[i] = kmer_
+			return embeddings
 		else:
 			return kmers
 	
+	def generate_dict_embedding(self, kmer, dict):
+		return dict[kmer]
 
 	def generate_kmer_dict(self, window_size):
 		letters = 'AGCT'
@@ -94,4 +140,6 @@ class DnaLoad:
 		for i in range(len(vocab)):
 			kmers_dict[vocab[i]] = i
 		return kmers_dict
+
+
 
