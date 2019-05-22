@@ -41,9 +41,9 @@ class PhageLoader():
 # for i, data in enumerate(train_loader, 0):
 # 	X, y = data
 
-loader = PhageLoader("data/input_file.txt")
-dataset = loader.get_kmers_for_read(3,2,0, embedding="dict", embed_size=None)
+loader = PhageLoader("data/input_file_reads.txt")
+dataset = loader.get_kmers_for_read(3,2,0, embedding=None, embed_size=None)
 train_loader = DataLoader(dataset=dataset, batch_size=32)
 for i, data in enumerate(train_loader, 0):
 	X, y = data
-	print(X)
+	print(y)
