@@ -31,13 +31,13 @@ class PhageFileLoader():
 		labels = self.dna_load.get_labels(k, stride, read_n)
 		return DnaDataSet(kmers, labels)
 
-	def get_n_loaders(self, n, batch_size, k, stride, embedding=None, embed_size=None):
+	def get_n_loaders(self, n='all', batch_size=32, k=3, stride=1, embedding=None, embed_size=None, drop_last=False):
 		loaders = []
 		if(n=="all"):
 			n = self.dna_load.get_number_genomes()
 		for i in range(n):
 			dataset = self.get_kmers_for_read(k, stride, i, embedding, embed_size)
-			loaders.append(DataLoader(dataset=dataset, batch_size=batch_size))
+			loaders.append(DataLoader(dataset=dataset, batch_size=batch_size, drop_last=drop_last))
 		return loaders
 
 
