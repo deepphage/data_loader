@@ -117,7 +117,6 @@ class DnaLoad:
 			kmer_dict = self.generate_kmer_dict(k)
 			vocab_size = len(kmer_dict)
 			kmer2embedding = nn.Embedding(vocab_size, embed_size)
-			print("embedding...")
 			embedded_kmers = torch.ones([len(kmers), embed_size], dtype=torch.float64)
 			for i, kmer in enumerate(kmers):
 				kmer_ = torch.tensor([kmer_dict[kmer]], dtype=torch.long)

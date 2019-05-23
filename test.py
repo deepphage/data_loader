@@ -33,7 +33,7 @@ loaders = loader.get_data_loaders()
 for l in loaders:
 	# if you want to get all genomes use "All"
 	dataLoaders = l.get_n_loaders("all",32,3,2, embedding="dict", embed_size=None)
-	print(len(dataLoaders))
+	print(len(dataLoaders[0]))
 	for dl in dataLoaders:
 		for i, data in enumerate(dl, 0):
 			X, y = data

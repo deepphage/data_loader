@@ -3,7 +3,7 @@ from os import listdir
 import re
 import numpy as np
 from os.path import isfile, join
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from data_loader.DnaLoad import DnaLoad
 
 class DnaDataSet(Dataset):
@@ -35,10 +35,18 @@ class PhageFileLoader():
 		loaders = []
 		if(n=="all"):
 			n = self.dna_load.get_number_genomes()
+		datasets = np.empty(n, dtype=object)
 		for i in range(n):
 			dataset = self.get_kmers_for_read(k, stride, i, embedding, embed_size)
-			loaders.append(DataLoader(dataset=dataset, batch_size=batch_size, drop_last=drop_last))
-		return loaders
+			datasets[i] = dataset
+		d = ConcatDataset(datasets)
+		return d
+	
+
+	# def get_dataLoader(self, n='all', batch_size=32, k=3, stride=1, embedding=None, embed_size=None, drop_last=False ):
+
+	# 	loaders.append(DataLoader(dataset=d, batch_size=batch_size, drop_last=drop_last))
+	# 	return loaders
 
 
 # loader = PhageLoader("data/input_file.txt")
@@ -67,11 +75,14 @@ class PhageLoader():
 		selected_files = list(filter(regex.search, files))
 		return selected_files
 
-	def get_data_loaders(self):
+	def get_data_loader(self, n='all', batch_size=32, k=3, stride=1, embedding=None, embed_size=None, drop_last=False):
+		datasets = np.empty(len(self.filenames), dtype=object)
 		for i in range(len(self.filenames)):
 			dl = PhageFileLoader(self.datafolder+self.filenames[i])
-			self.phageLoaders[i] = dl
-		return self.phageLoaders
+			dataset = dl.get_n_loaders(n,batch_size,k,stride,embedding,embed_size,drop_last)
+			datasets[i] = dataset
+		d = ConcatDataset(datasets)
+		return DataLoader(dataset=d, batch_size=batch_size, drop_last=drop_last)
 
 
 
