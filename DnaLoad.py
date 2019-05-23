@@ -1,9 +1,8 @@
 import numpy as np
-import pickle
 import torch.nn as nn
 import torch
 from itertools import product
-from dna2vec.dna2vec.multi_k_model import MultiKModel
+# from dna2vec.dna2vec.multi_k_model import MultiKModel
 from statistics import mode 
 
 class DnaLoad:
@@ -26,10 +25,11 @@ class DnaLoad:
 		self.generate_sequence()
 	
 	def init_dna2vec(self):
-		print("Loading dna2vec matrix")
-		self.filepath = 'dna2vec/pretrained/dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v'
-		self.mk_model = MultiKModel(self.filepath)
-		print("Done loading .w2v")
+		# print("Loading dna2vec matrix")
+		# self.filepath = 'dna2vec/pretrained/dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v'
+		# self.mk_model = MultiKModel(self.filepath)
+		# print("Done loading .w2v")
+		return None
 
 	def keep_forward(self):
 		newf = []
@@ -38,6 +38,7 @@ class DnaLoad:
 			if(read_type[0:len(read_type)-1] == "forward"):
 				newf.append(self.f[i])
 		return newf
+
 
 
 	def read_from_file(self):
@@ -103,11 +104,13 @@ class DnaLoad:
 		for i, seq in enumerate(self.window_samples(k, stride, self.sequence[genome_number])):
 				kmers[i] = seq
 		if(embedding=='dna2vec'):
-			self.init_dna2vec()
-			embeddings = torch.ones([len(kmers), 100], dtype=torch.float64)
-			for i, kmer in enumerate(kmers):
-				embed = self.mk_model.vector(kmer)
-				embeddings[i] = torch.tensor(embed, dtype=torch.float64)
+			embeddings=[]
+			print("WARNING DNA2VEC is disabled for now")
+			# self.init_dna2vec()
+			# embeddings = torch.ones([len(kmers), 100], dtype=torch.float64)
+			# for i, kmer in enumerate(kmers):
+			# 	embed = self.mk_model.vector(kmer)
+			# 	embeddings[i] = torch.tensor(embed, dtype=torch.float64)
 			return embeddings
 		elif(embedding=='kmer_embed'):
 			assert embed_size != None, "When choosing kmer_embed, also provide an embed_size argument (int)"
