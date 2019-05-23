@@ -92,7 +92,6 @@ class DnaLoad:
 		tot_labs = []
 		assert n <= len(self.f), "argument n cannot be bigger than number of genomes available"
 		for i in range(n):
-			print(k)
 			lab = self.get_labels(k, 2, i)
 			tot_labs.append(lab)
 		return tot_labs
@@ -103,6 +102,7 @@ class DnaLoad:
 		kmers = np.empty(int(((len(self.sequence[genome_number])-k)/stride)+1), dtype=object)
 		for i, seq in enumerate(self.window_samples(k, stride, self.sequence[genome_number])):
 				kmers[i] = seq
+		# split kmers into reads of length read_length
 		if(embedding=='dna2vec'):
 			embeddings=[]
 			print("WARNING DNA2VEC is disabled for now")
@@ -123,7 +123,7 @@ class DnaLoad:
 				embedded_kmers[i] = kmer2embedding(kmer_)
 			return embedded_kmers
 		elif(embedding=='dict'):
-			embeddings = torch.ones(len(kmers), dtype=torch.int32)
+			embeddings = np.ones(len(kmers), dtype=np.int32)
 			dic = self.generate_kmer_dict(k)
 			for i, kmer in enumerate(kmers):
 				kmer_ = self.generate_dict_embedding(kmer, dic)

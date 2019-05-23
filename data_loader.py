@@ -8,17 +8,17 @@ from data_loader.DnaLoad import DnaLoad
 
 class DnaDataSet(Dataset):
 
-	def __init__(self, kmers, labels):
-		self.kmers = kmers
-		self.labels = labels
+	def __init__(self, reads, read_labels):
+		self.reads = reads
+		self.read_labels = read_labels
 		
 	def __len__(self):
-		return len(self.labels)
+		return len(self.read_labels)
 
 
 	def __getitem__(self, index):
-		X = self.kmers[index]
-		y = self.labels[index]
+		X = self.reads[index]
+		y = self.read_labels[index]
 		return X, y
 
 class PhageFileLoader():
@@ -26,41 +26,25 @@ class PhageFileLoader():
 		self.file = file
 		self.dna_load = DnaLoad(file)
 
-	def get_kmers_for_read(self, k, stride, read_n, embedding=None, embed_size=None):
+	def get_kmers_for_read(self, k, stride, read_n, read_length=100, embedding=None, embed_size=None):
 		kmers = self.dna_load.get_kmer(k, stride, read_n, embedding, embed_size)
 		labels = self.dna_load.get_labels(k, stride, read_n)
-		return DnaDataSet(kmers, labels)
+		# split into reads of length read_length
+		reads = kmers[:read_length * (kmers.shape[0] // read_length)].reshape(-1, read_length)
+		read_labels = labels[:read_length * (labels.shape[0] // read_length)].reshape(-1, read_length)
+		return DnaDataSet(reads, read_labels)
 
-	def get_n_loaders(self, n='all', batch_size=32, k=3, stride=1, embedding=None, embed_size=None, drop_last=False):
+	def get_n_loaders(self, n='all', read_length=100, batch_size=32, k=3, stride=1, embedding=None, embed_size=None):
 		loaders = []
 		if(n=="all"):
 			n = self.dna_load.get_number_genomes()
 		datasets = np.empty(n, dtype=object)
 		for i in range(n):
-			dataset = self.get_kmers_for_read(k, stride, i, embedding, embed_size)
+			dataset = self.get_kmers_for_read(k, stride, i, read_length, embedding=embedding, embed_size=embed_size)
 			datasets[i] = dataset
 		d = ConcatDataset(datasets)
 		return d
 	
-
-	# def get_dataLoader(self, n='all', batch_size=32, k=3, stride=1, embedding=None, embed_size=None, drop_last=False ):
-
-	# 	loaders.append(DataLoader(dataset=d, batch_size=batch_size, drop_last=drop_last))
-	# 	return loaders
-
-
-# loader = PhageLoader("data/input_file.txt")
-# dataLoaders = loader.get_n_loaders(3,32,3,2, embedding="dict", embed_size=None)
-# train_loader = dataLoaders[0]
-# for i, data in enumerate(train_loader, 0):
-# 	X, y = data
-
-# loader = PhageFileLoader("data/Input_NC_013693.txt")
-# dataset = loader.get_kmers_for_read(3,2,0, embedding=None, embed_size=None)
-# train_loader = DataLoader(dataset=dataset, batch_size=32)
-# for i, data in enumerate(train_loader, 0):
-# 	X, y = data
-# 	print(y)
 
 
 class PhageLoader():
@@ -75,11 +59,11 @@ class PhageLoader():
 		selected_files = list(filter(regex.search, files))
 		return selected_files
 
-	def get_data_loader(self, n='all', batch_size=32, k=3, stride=1, embedding=None, embed_size=None, drop_last=False):
+	def get_data_loader(self, n_files='all' ,n='all', read_length=100, batch_size=32, k=3, stride=1, embedding=None, embed_size=None, drop_last=False):
 		datasets = np.empty(len(self.filenames), dtype=object)
 		for i in range(len(self.filenames)):
 			dl = PhageFileLoader(self.datafolder+self.filenames[i])
-			dataset = dl.get_n_loaders(n,batch_size,k,stride,embedding,embed_size,drop_last)
+			dataset = dl.get_n_loaders(n=n,read_length=read_length, batch_size=batch_size,k=k,stride=stride,embedding=embedding,embed_size=embed_size)
 			datasets[i] = dataset
 		d = ConcatDataset(datasets)
 		return DataLoader(dataset=d, batch_size=batch_size, drop_last=drop_last)
