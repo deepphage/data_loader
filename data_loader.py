@@ -4,7 +4,7 @@ import re
 import numpy as np
 from os.path import isfile, join
 from torch.utils.data import Dataset, DataLoader
-from DnaLoad import DnaLoad
+from data_loader.DnaLoad import DnaLoad
 
 class DnaDataSet(Dataset):
 

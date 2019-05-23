@@ -2,7 +2,7 @@
 # 			EXAMPLE USE 			#
 #####################################
 
-from data_loader import PhageLoader
+from data_loader.data_loader import PhageLoader
 from torch.utils.data import DataLoader
 
 '''
