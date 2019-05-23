@@ -69,6 +69,16 @@ class PhageLoader():
 		return DataLoader(dataset=d, batch_size=batch_size, drop_last=drop_last)
 
 
+	def get_data_set(self, n_files='all' ,n='all', read_length=100, batch_size=32, k=3, stride=1, embedding=None, embed_size=None, drop_last=False):
+		datasets = np.empty(len(self.filenames), dtype=object)
+		for i in range(len(self.filenames)):
+			dl = PhageFileLoader(self.datafolder+self.filenames[i])
+			dataset = dl.get_n_loaders(n=n,read_length=read_length, batch_size=batch_size,k=k,stride=stride,embedding=embedding,embed_size=embed_size)
+			datasets[i] = dataset
+		d = ConcatDataset(datasets)
+		return d
+
+
 
 
 
