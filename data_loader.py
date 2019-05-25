@@ -1,6 +1,7 @@
 import torch
 from os import listdir
 import re
+from itertools import product
 import numpy as np
 from os.path import isfile, join
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
@@ -81,6 +82,14 @@ class PhageLoader():
 			datasets[i] = dataset
 		d = ConcatDataset(datasets)
 		return d
+
+	def get_dict(self, window_size):
+		letters = 'AGCT'
+		vocab = [''.join(i) for i in product(letters, repeat = window_size)]
+		kmers_dict = {}
+		for i in range(len(vocab)):
+			kmers_dict[vocab[i]] = i
+		return kmers_dict
 
 
 
