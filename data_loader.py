@@ -7,6 +7,8 @@ from os.path import isfile, join
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from data_loader.DnaLoad import DnaLoad
 
+from dna2vec.dna2vec.multi_k_model import MultiKModel
+
 class DnaDataSet(Dataset):
 
 	def __init__(self, reads, read_labels):
@@ -47,7 +49,6 @@ class PhageFileLoader():
 		return d
 	
 
-
 class PhageLoader():
 	def __init__(self, datafolder):
 		self.datafolder = datafolder
@@ -83,13 +84,21 @@ class PhageLoader():
 		d = ConcatDataset(datasets)
 		return d
 
-	def get_dict(self, window_size):
+	def get_dict(self, window_size, embedding='dict'):
 		letters = 'AGCT'
 		vocab = [''.join(i) for i in product(letters, repeat = window_size)]
 		kmers_dict = {}
 		for i in range(len(vocab)):
 			kmers_dict[vocab[i]] = i
+		if(embedding=='dna2vec'):
+			print("loading DNA 2 vec model")
+			filepath = 'dna2vec/pretrained/dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v'
+			mk_model = MultiKModel(filepath)
+			for kmer in kmers_dict.keys():
+				kmers_dict[kmer] = mk_model.vector(kmer)
 		return kmers_dict
+
+
 
 
 
