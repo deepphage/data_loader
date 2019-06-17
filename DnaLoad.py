@@ -20,6 +20,7 @@ class DnaLoad:
 		# keep only forward reads
 		if(keep_reverse == False):
 			self.f = self.keep_forward()
+		self.ids = np.empty(len(self.f), dtype=object)
 		self.sequence = np.empty(len(self.f), dtype=object)
 		self.lab = np.empty(len(self.f), dtype=object)
 		self.generate_sequence()
@@ -46,6 +47,7 @@ class DnaLoad:
 
 	def generate_sequence(self):
 		for i in range(len(self.f)):
+			self.ids[i] = self.f[i].split(';')[0].split("/")[-1]
 			self.sequence[i] = self.f[i].split(';')[1]
 			self.lab[i] = self.f[i].split(';')[3]
 
@@ -71,6 +73,9 @@ class DnaLoad:
 
 	def get_number_genomes(self):
 		return len(self.f)
+
+	def get_k_id(self, read_n):
+		return self.ids[read_n]
 
 
 	def window_samples(self, k, stride, fseq):
